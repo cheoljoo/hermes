@@ -2,6 +2,10 @@
 
 [Nous Research의 Hermes Agent](https://github.com/NousResearch/hermes-agent)를 Docker로 설치/실행하기 위한 저장소입니다.
 
+📖 **문서**
+- [guide.md](guide.md) — 초보자용 전체 설치 및 운영 가이드 (API 키 발급 방법 포함)
+- [telegram.md](telegram.md) — Telegram 대화 내역 및 작업 이력 정리
+
 이 저장소는 Hermes Agent 소스를 직접 포함(vendoring)하지 않습니다. 대신
 `docker-compose.yml`의 빌드 컨텍스트가 업스트림 GitHub 저장소(특정 릴리즈
 태그로 고정)를 직접 가리키므로, `docker compose build` 실행 시 Docker가
