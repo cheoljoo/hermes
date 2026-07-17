@@ -1,0 +1,58 @@
+# docker-compose.yml for Hermes Agent
+#
+# This repo does not vendor the Hermes Agent source. The `build.context`
+# below points straight at the upstream repo, pinned to a release tag, so
+# `docker compose build` fetches and builds it directly — nothing to keep
+# in sync locally. Bump HERMES_AGENT_REF to track a newer release.
+#
+# Usage:
+#   cp .env.example .env            # fill in at least one LLM provider key
+#   HERMES_UID=$(id -u) HERMES_GID=$(id -g) docker compose up -d --build
+#
+# Set HERMES_UID / HERMES_GID to the host user that owns ~/.hermes so files
+# created inside the container stay readable/writable on the host.
+#
+# Security notes (inherited from upstream):
+#   - The dashboard binds to 127.0.0.1 by default; it stores API keys, so
+#     don't expose it on LAN without auth in front of it.
+#   - Do not override the container entrypoint; /init (s6-overlay) must
+#     stay first in the command chain or the gateway won't start correctly.
+
+x-hermes-build: &hermes-build
+  context: https://github.com/NousResearch/hermes-agent.git#${HERMES_AGENT_REF:-v2026.7.1}
+
+services:
+  gateway:
+    build: *hermes-build
+    image: hermes-agent:${HERMES_AGENT_REF:-v2026.7.1}
+    container_name: hermes
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    volumes:
+      - ~/.hermes:/opt/data
+      # Custom provider plugins (e.g. EXAONE) — no image rebuild needed to add/change one.
+      - ./plugins:/opt/data/plugins/model-providers:ro
+    environment:
+      - HERMES_UID=${HERMES_UID:-10000}
+      - HERMES_GID=${HERMES_GID:-10000}
+    command: ["gateway", "run"]
+
+  dashboard:
+    image: hermes-agent:${HERMES_AGENT_REF:-v2026.7.1}
+    container_name: hermes-dashboard
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - gateway
+    env_file:
+      - .env
+    volumes:
+      - ~/.hermes:/opt/data
+      - ./plugins:/opt/data/plugins/model-providers:ro
+    environment:
+      - HERMES_UID=${HERMES_UID:-10000}
+      - HERMES_GID=${HERMES_GID:-10000}
+    # Localhost-only. For remote access, tunnel via: ssh -L 9119:localhost:9119
+    command: ["dashboard", "--host", "127.0.0.1", "--no-open"]

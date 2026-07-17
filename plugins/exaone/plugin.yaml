@@ -1,0 +1,5 @@
+name: exaone-provider
+kind: model-provider
+version: 1.0.0
+description: LGE AILab internal EXACODE SWE API (EXAONE)
+author: cheoljoo.lee
