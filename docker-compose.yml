@@ -54,5 +54,10 @@ services:
     environment:
       - HERMES_UID=${HERMES_UID:-10000}
       - HERMES_GID=${HERMES_GID:-10000}
-    # Localhost-only. For remote access, tunnel via: ssh -L 9119:localhost:9119
-    command: ["dashboard", "--host", "127.0.0.1", "--no-open"]
+    # Bound to 0.0.0.0 so it's reachable at http://lotto645.lge.com:9119 from
+    # other machines (Hermes Desktop remote backend, browser dashboard).
+    # A non-loopback bind auto-requires auth — see HERMES_DASHBOARD_BASIC_AUTH_*
+    # in .env. network_mode: host means no docker -p port mapping is needed;
+    # the container binds directly on the host's network stack, so make sure
+    # the host firewall allows inbound tcp/9119.
+    command: ["dashboard", "--host", "0.0.0.0", "--no-open"]
